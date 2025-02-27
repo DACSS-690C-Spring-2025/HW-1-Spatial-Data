@@ -1,0 +1,99 @@
+
+<br> 
+<center><img src="https://github.com/DACSS-CSSmeths/guidelines/blob/main/pics/small_logo_ccs_meths.jpg?raw=true" width="700"></center>
+
+
+_____
+# Exploring spatial data
+
+## Files created in Python:
+
+```{r}
+rm(list = ls())  # Clear environment
+library(sf)      
+library(ggplot2)
+
+# Correct URL
+mapLink <- 'https://github.com/DACSS-690C-Spring-2025/HW-1-Spatial-Data/raw/refs/heads/main/countriesCIA.gpkg'
+
+# Read the GeoPackage layer
+countriesCIA <- st_read(mapLink, layer = 'cia')
+worldBorders=read_sf(mapLink, layer='border')
+```
+## Variables
+```{r}
+names(countriesCIA)
+```
+
+## Best countries for obesity, that is 0:1 Very Low rates
+```{r}
+# Select obesity
+bestObesityCountries <- countriesCIA[countriesCIA$obesity_code == 0, c("COUNTRY", "name", "obesity_levels")]
+print(bestObesityCountries)
+```
+## Map of level of obesities, continuous values
+```{r}
+# Base map with world borders in grey
+base <- ggplot(data = worldBorders) + 
+        geom_sf(fill = 'grey', color = NA) + 
+        theme_linedraw()
+
+# Obesity map with viridis color scale
+base + geom_sf(data = countriesCIA,
+               aes(fill = obesityAdults_rate),  # Variable for coloring geometry
+               color = NA) +  # No borders for smoother visualization
+    labs(fill = "Obesity Rate\n(grey = missing)",
+         title = "Obesity Rates by Country") +
+    scale_fill_viridis_c(direction = 1, option = 'A')  # "A" is MAGMA color scale
+```
+## Map for obesity, discrete values 
+```{r}
+base + geom_sf(data = countriesCIA,
+               aes(fill = obesity_levels),  # Use obesity_levels instead of tobacco_levels
+               color = NA) +  # No borders for smooth visualization
+       labs(fill = "Obesity Level",
+            title = "Obesity Levels by Country") +
+       scale_fill_brewer(palette = "PiYG", direction = -1)  
+```
+# Best countries in all three variables, that is low rates of tobacco, alcohol, and obesity
+```{r}
+# Filter for countries that are low
+best_countries <- countriesCIA[
+    (countriesCIA$tobacco_levels == "1.very low") & 
+    (countriesCIA$alcohol_levels == "1.very low") & 
+    (countriesCIA$obesity_levels == "1.very low"), 
+    c("COUNTRY", "name", "tobacco_levels", "alcohol_levels", "obesity_levels")]
+
+print(best_countries)
+```
+## Worst countries in all three variables, that is high or very high
+```{r}
+# Select countr
+worst_countries <- countriesCIA[
+    (countriesCIA$tobacco_levels == "5.very high") | 
+    (countriesCIA$alcohol_levels == "5.very high") | 
+    (countriesCIA$obesity_levels == "5.very high"),
+    c("COUNTRY", "name", "tobacco_levels", "alcohol_levels", "obesity_levels")]
+print(worst_countries)
+```
+## Homework objective
+
+```{r}
+best_countries <- best_countries[, c("COUNTRY", "name", "geom")]
+
+# Plot the best countries
+base <- ggplot(data = countriesCIA) + 
+        geom_sf(fill = "grey80", color = "white") +  # Light grey for all countries
+        theme_minimal()
+
+# Highlight the best countries
+map_plot <- base + 
+        geom_sf(data = best_countries, fill = "green", color = "black", size = 0.3) +  
+        labs(title = "Countries with the Lowest Levels in Tobacco, Alcohol, and Obesity",
+             subtitle = "Highlighted in Green",
+             fill = "Best Countries")
+map_plot
+
+# Save the plot as an HTML file
+ggsave("index.png", map_plot, width = 10, height = 6, dpi = 300)
+```
