@@ -96,6 +96,21 @@ map_plot <- base +
              fill = "Best Countries")
 map_plot
 
-# Save the plot as an HTML file
+# Save as HTML file
 ggsave("index.png", map_plot, width = 10, height = 6, dpi = 300)
 ```
+
+### Only the Best
+```{r}
+# Plot only best countries, remove base layer countriesCIA
+map_plot_b <- ggplot(data = best_countries) + 
+        geom_sf(fill = "green", color = "black", size = 0.3) +  
+        theme_minimal() +
+        labs(title = "Countries with the Lowest Levels in Tobacco, Alcohol, and Obesity",
+             subtitle = "Highlighted in Green",
+             fill = "Best Countries")
+print(map_plot_b)
+# Save as HTML file
+ggsave("index.png", map_plot_b, width = 10, height = 6, dpi = 300)
+```
+
